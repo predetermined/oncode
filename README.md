@@ -11,9 +11,9 @@ A very, very lightweight code editor, written in pure Javascript
 ## Supported languages (change data-language attribute)
 - Javascript 
 
-- HTML (meeeeh)
+- HTML (Not the best expierence yet)
 
-- CSS (meh)
+- CSS (Useable but needs some more work)
 
 
 
