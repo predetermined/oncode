@@ -1,13 +1,20 @@
-<h1>CodeNull</h1>
-<p>A very, very lightweight code editor, written in pure Javascript</p>
+# CodeNull
+A very, very lightweight code editor, written in pure Javascript
 
-<h2>Features</h2>
-* Highlighting<br>
-* Suggestions<br>
 
-<h2>Supported languages</h2>
-* Javascript (data-language="js")<br>
-* HTML (data-language="html")<br>
-* CSS (data-language="css")<br><br>
+## Features
+* Highlighting
 
-<u>Please feel free to contribute! :)</u>
+* Suggestions
+
+
+## Supported languages
+- Javascript (data-language="js")
+
+- HTML (data-language="html")
+
+- CSS (data-language="css")
+
+
+
+_Please feel free to contribute! :)_
