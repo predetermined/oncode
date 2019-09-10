@@ -8,12 +8,12 @@ A very, very lightweight code editor, written in pure Javascript
 * Suggestions
 
 
-## Supported languages (change data-language attribute)
+## Supported languages
 - Javascript 
 
-- HTML (Not the best expierence yet)
+- (HTML)
 
-- CSS (Useable but needs some more work)
+- (CSS)
 
 
 
