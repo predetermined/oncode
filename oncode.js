@@ -438,7 +438,7 @@ function setOffset() {
                 ? getCharactersBeforeCursor().split("\n")[getCharactersBeforeCursor().split("\n").length - 2].replace(/[a-zA-Z{}\[\]()](.*)/g, "")
                 : getCharactersBeforeCursor().replace(/[a-zA-Z{}\[\]()](.*)/g, "");
 
-    currentTabOffset = offset.match(/( {4}| {4})/g) ? offset.match(/( {4}| {4})/g).length : 0;
+    currentTabOffset = offset.match(/( {4}| {4}| {4})/g) ? offset.match(/( {4}| {4}| {4})/g).length : 0;
 }
 
 setInterval(() => { colorCode(); }, 50);
