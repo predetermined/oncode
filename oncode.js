@@ -241,10 +241,7 @@ async function handleKeys(e) {
             document.execCommand("insertHTML", false, `"`);
             document.getSelection().modify("move", "backward", "character");
             break;
-    }
-
-    switch(e.code) {
-        case "IntlBackslash": {
+        case `>`:
             if (!e.shiftKey || editor.getAttribute("data-language") !== "html") return;
 
             const selection = window.getSelection();
@@ -264,7 +261,11 @@ async function handleKeys(e) {
             document.getSelection().modify("move", "backward", "character");
             document.getSelection().modify("move", "forward", "character");
             break;
-        }
+    }
+
+    if (adviser.opened) return;
+
+    switch(e.code) {
         case "Space":
             if (!e.ctrlKey) return;
 
