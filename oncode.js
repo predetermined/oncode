@@ -3,11 +3,11 @@ const languages = {
         colors: [
             { regex: { string: "(var|const|let|if|else|document|window|do|forEach|for|return|switch|try|catch|function|continue|debugger|break|while|true|null|undefined|false|new|await|async)(?=( |;|\\.|{|}|\\=|\\(|\\)))(?!(| )<\\/(.*)>)", flags: "gi", },
                 class: "__general" },
-            { regex: { string: "('([a-zA-Z\\.,!\"§$%&/()-=?\\[\\]# ]*?)')", flags: "gi", },
+            { regex: { string: "('([a-zA-Z\\.,!\"§$%&/()-=?\\[\\]#` ]*?)')", flags: "gi", },
                 class: "__strings" },
-            { regex: { string: "(`([a-zA-Z\\.,!\"§$%&/()-=?\\[\\]# ]*?)`)", flags: "gi", },
+            { regex: { string: "(`([a-zA-Z\\.,!\"§$%&/()-=?\\[\\]#` ]*?)`)", flags: "gi", },
                 class: "__strings" },
-            { regex: { string: `("([a-zA-Z\\.,!\"§$%&/()-=?\\[\\]# ]*?)")`, flags: "gi", },
+            { regex: { string: "(\"([a-zA-Z\\.,!\"§$%&/()-=?\\[\\]#` ]*?)\")", flags: "gi", },
                 class: "__strings" },
             { regex: { string: "((\\.([a-zA-Z0-9]*))\\()", flags: "gi", },
                 class: "__functions" },
@@ -197,8 +197,6 @@ function colorCode() {
 }
 
 function checkKeyActions(e) {
-    // @TODO: Fix problem with html
-
     if (e.code.includes("Key") && !e.ctrlKey) {
         showSuggestions({ askedForSuggestions: false });
     }else if (!openedAdviserByInteraction && e.code !== "ArrowDown" && e.code !== "ArrowUp") {
@@ -208,7 +206,7 @@ function checkKeyActions(e) {
 }
 
 async function handleKeys(e) {
-    if (adviser.opened) return;
+    if (adviser.opened && openedAdviserByInteraction) return;
 
     switch(e.key) {
         case "{": {
