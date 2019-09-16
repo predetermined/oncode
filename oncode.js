@@ -14,7 +14,9 @@ const languages = {
             { regex: { string: "([\\(\\)])", flags: "gi", },
                 class: "__functions" },
             { regex: { string: "([{}\\[\\]])", flags: "g", },
-                class: "__brackets" }],
+                class: "__brackets" },
+            { regex: { string: "(\\/\\*((.|\\n|\\r)*)\\*\\/|\\/\\/(.*))", flags: "g", },
+                class: "__comments" }],
         suggestions: ["const", "let", "location", "querySelector", "querySelectorAll", "getElementById", "getElementsByClassName", "getElementsByTagName", "map", "innerHTML",
             "forEach", "for", "replace", "toLowerCase", "toUpperCase", "indexOf", "length", "includes", "trim", "split", "valueOf", "filter", "find", "innerText", "body",
             "join", "value", ...Object.getOwnPropertyNames(window)]
