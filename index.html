@@ -5,55 +5,8 @@
 
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="oncode.css">
 		<style>
-			* {
-				box-sizing: border-box;
-			}
-
-			.__general {
-				color: #b531b5;
-			}
-
-			.__brackets {
-				color: orange;
-			}
-
-			.__functions {
-				color: #9393d4;
-			}
-
-			.__strings {
-				color: #6bd46b;
-			}
-
-			.__tags {
-				color: #d45656;
-			}
-
-			.__lesserOrGreaterBrackets {
-				color: #77bdc1;
-			}
-
-			.__innerBrackets {
-				color: #d26e6e;
-			}
-
-			.__attributes {
-				color: #ffeba0;
-			}
-
-			.__selectors {
-				color: grey;
-			}
-
-			.__numbers {
-				color: lightcoral;
-			}
-			
-			.__comments {
-            			opacity: 0.5;
-        		}
-
 			body {
 				position: fixed;
 				top: 0;
@@ -61,90 +14,34 @@
 				right: 0;
 				bottom: 0;
 				display: flex;
+				flex-wrap: wrap;
 				align-items: center;
 				justify-content: center;
 				font-family: monospace;
 				background: #222;
 			}
 
-			main {
-				height: 50vh;
+			.editor {
+				height: 30vh;
 				width: 80%;
 				background: #111;
 				display: block;
 				position: relative;
 				padding: 25px;
 				font-size: 16px;
-			}
-
-			main > [data-highlights], main > [data-editor] {
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				white-space: pre-wrap;
-				padding: 25px;
-			}
-
-			main > [data-highlights] {
 				color: #fff;
-			}
-
-			main > [data-editor] {
-				color: transparent;
-				caret-color: #fff;
-			}
-
-			main > [data-editor]:focus {
-				outline: none;
-			}
-
-			main > [data-adviser] {
-				background: #5e5b6b;
-				position: fixed;
-				bottom: unset;
-				right: unset;
-				padding: 0;
-			}
-
-			main > [data-adviser]:empty {
-				display: none;
-			}
-
-			main > [data-adviser] > a {
-				width: 100%;
-				padding: 5px;
-				display: block;
-			}
-
-			main > [data-adviser] > a:nth-child(1n + 7) {
-				display: none;
-			}
-
-			main > [data-adviser] > a[data-active] {
-				position: relative;
-			}
-
-			main > [data-adviser] > a[data-active]::after {
-				content: "";
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				background: #fff;
-				opacity: 0.2;
 			}
 		</style>
 	</head>
 
 	<body>
-		<main>
-			<div data-adviser></div>
-			<div data-highlights id="highlights"></div>
-			<div spellcheck="false" data-editor data-language="js" contenteditable="true"></div>
-		</main>
+		<div class="editor" data-oncodejs></div>
+		<div class="editor" data-oncodehtml></div>
+
+		<script src="oncode.js"></script>
+		<script>
+			const jsEditor = new OnCode(document.querySelector("[data-oncodejs]"), "js");
+			const htmlEditor = new OnCode(document.querySelector("[data-oncodehtml]"), "html");
+		</script>
 	</body>
-	<script src="oncode.js"></script>
 </html>
