@@ -47,19 +47,21 @@
 }
 
 [data-editor], [data-highlights] {
+    min-height: 100%;
+    height: auto;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
     white-space: pre-wrap;
-    padding: 25px;
+    padding: 15px;
 }
 
 [data-editor] {
     color: transparent;
     caret-color: #fff;
     z-index: 10;
+    outline: none;
 }
 
 [data-adviser] {
