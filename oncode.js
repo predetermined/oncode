@@ -69,7 +69,7 @@ class OnCode {
 		this.editor.dataset.language = this.language;
 		this.editor.dataset.editor = "";
 		this.editor.innerHTML = this.base.innerHTML;
-		this.editor.innerHTML = "";
+		this.base.innerHTML = "";
 		this.base.appendChild(this.editor);
 
 		this.highlights = document.createElement("div");
