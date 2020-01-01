@@ -1,5 +1,5 @@
-# CodeNull
-A very, very lightweight code editor, written in pure Javascript
+# OnCode
+A very, very lightweight code editor.
 
 
 ## Features
@@ -7,14 +7,23 @@ A very, very lightweight code editor, written in pure Javascript
 
 * Suggestions
 
+* Auto intending
+
 
 ## Supported languages
 - Javascript 
 
-- (HTML)
+- HTML
 
-- (CSS)
+- CSS
 
+## Usage
+```javascript
+const editor = new OnCode(
+  document.querySelector("#myEditor"), // Targeted element
+  "js" // Programming language; Supported values: "js", "html", "css"
+);
+```
 
 
 _Please feel free to contribute! :)_
