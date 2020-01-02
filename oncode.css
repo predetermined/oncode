@@ -43,7 +43,7 @@
 }
 
 .\|\|comments {
-    opacity: 0.5;
+    color: #777;
 }
 
 [data-editor], [data-highlights] {
