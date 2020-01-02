@@ -47,20 +47,26 @@
 }
 
 [data-editor], [data-highlights] {
-    position: absolute;
-    min-height: 100%;
-    height: auto;
-    top: 0;
-    left: 0;
-    right: 0;
     white-space: pre-wrap;
-    padding: 15px;
+    min-height: 100%;
 }
 
 [data-editor] {
     color: transparent;
     caret-color: #fff;
     z-index: 10;
+    position: sticky;
+    outline: none;
+    width: 100%;
+}
+
+[data-highlights] {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: inherit;
 }
 
 [data-adviser] {
