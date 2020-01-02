@@ -26,7 +26,14 @@ const languages = {
 			...Object.getOwnPropertyNames(Number.prototype),
 			...Object.getOwnPropertyNames(Array.prototype),
 			...Object.getOwnPropertyNames(Object.prototype)
-		]
+		].reduce((properties, property) => {
+			if (properties.includes(property)) return properties;
+
+			return [
+				...properties,
+				property
+			]
+		}, [])
 	},
 	html: {
 		colors: [{ regex: { string: "([a-z]*=(.*?)(?=&gt;))", flags: "g", },
@@ -65,41 +72,41 @@ const languages = {
 
 class OnCode {
 	constructor(base, language) {
-		this.base = base;
-		this.language = language;
-		this.currentTabOffset = 0;
-		this.openedAdviserByInteraction = true;
-		this.tabCharacter = "\u00a0\u00a0\u00a0\u00a0";
+		this._base = base;
+		this._language = language;
+		this._currentTabOffset = 0;
+		this._openedAdviserByInteraction = true;
+		this._tabCharacter = "\u00a0\u00a0\u00a0\u00a0";
 
-		this.editor = document.createElement("div");
-		this.editor.setAttribute("contenteditable", "true");
-		this.editor.dataset.language = this.language;
-		this.editor.dataset.editor = "";
-		this.editor.innerHTML = this.base.innerHTML;
-		this.base.innerHTML = "";
-		this.base.appendChild(this.editor);
+		this._editor = document.createElement("div");
+		this._editor.setAttribute("contenteditable", "true");
+		this._editor.dataset.language = this._language;
+		this._editor.dataset.editor = "";
+		this._editor.innerHTML = this._base.innerHTML;
+		this._base.innerHTML = "";
+		this._base.appendChild(this._editor);
 
-		this.highlights = document.createElement("div");
-		this.highlights.dataset.highlights = "";
-		this.base.appendChild(this.highlights);
+		this._highlights = document.createElement("div");
+		this._highlights.dataset.highlights = "";
+		this._base.appendChild(this._highlights);
 
-		this.adviser = { element: document.createElement("div"), opened: false };
-		this.adviser.element.dataset.adviser = "";
-		this.base.appendChild(this.adviser.element);
+		this._adviser = { element: document.createElement("div"), opened: false };
+		this._adviser.element.dataset.adviser = "";
+		this._base.appendChild(this._adviser.element);
 
-		setInterval(() => { this.colorCode(); }, 50);
-		setInterval(() => { this.setOffset(); }, 250);
-		this.editor.addEventListener("keyup", this.handleAdviserBehavior.bind(this), true);
-		this.base.addEventListener("keydown", this.handleKeys.bind(this), true);
+		setInterval(() => { this._colorCode(); }, 50);
+		setInterval(() => { this._setOffset(); }, 250);
+		this._editor.addEventListener("keyup", this._handleAdviserBehavior.bind(this), true);
+		this._base.addEventListener("keydown", this._handleKeys.bind(this), true);
 	}
 
-	getSuggestions(focusWord, { object = null, showOnlyGoodMatching = false } = {}) {
-		let availableSuggestions = languages[this.editor.getAttribute("data-language")].suggestions;
+	_getSuggestions(focusWord, { object = null, showOnlyGoodMatching = false } = {}) {
+		let availableSuggestions = languages[this._editor.getAttribute("data-language")].suggestions;
 
 		if (object && window[object] && Object.getOwnPropertyNames(window[object])) {
 			availableSuggestions = [
 				...Object.getOwnPropertyNames(window[object]),
-				...languages[this.editor.getAttribute("data-language")].suggestions
+				...languages[this._editor.getAttribute("data-language")].suggestions
 			];
 		}
 
@@ -112,9 +119,9 @@ class OnCode {
 		return [...firstLevelSuggestions, ...secondLevelSuggestions, ...thirdLevelSuggestions].length > 0 ? [...firstLevelSuggestions, ...secondLevelSuggestions, ...thirdLevelSuggestions] : ["No results"];
 	}
 
-	insertSuggestion(selectedElement) {
-		this.editor.focus();
-		this.adviser.element.innerHTML = "";
+	_insertSuggestion(selectedElement) {
+		this._editor.focus();
+		this._adviser.element.innerHTML = "";
 
 		const suggestion = selectedElement.innerText;
 		const focusWord = selectedElement.dataset.focusword;
@@ -131,9 +138,9 @@ class OnCode {
 		selection.removeAllRanges();
 		selection.addRange(range);
 
-		this.editor.innerHTML = this.editor.innerHTML.replace(focusWord + suggestion, `<span data-inserted>${suggestion}</span>`);
-		range.setStartAfter(this.editor.querySelector("[data-inserted]"));
-		range.setEndAfter(this.editor.querySelector("[data-inserted]"));
+		this._editor.innerHTML = this._editor.innerHTML.replace(focusWord + suggestion, `<span data-inserted>${suggestion}</span>`);
+		range.setStartAfter(this._editor.querySelector("[data-inserted]"));
+		range.setEndAfter(this._editor.querySelector("[data-inserted]"));
 		selection.removeAllRanges();
 		selection.addRange(range);
 
@@ -149,36 +156,36 @@ class OnCode {
 		selection.removeAllRanges();
 		selection.addRange(range);
 
-		this.editor.querySelector("[data-inserted]").outerHTML = this.editor.querySelector("[data-inserted]").innerHTML;
-		setTimeout(() => { this.adviser.opened = false; }, 10);
+		this._editor.querySelector("[data-inserted]").outerHTML = this._editor.querySelector("[data-inserted]").innerHTML;
+		setTimeout(() => { this._adviser.opened = false; }, 10);
 	}
 
-	showSuggestions({ askedForSuggestions = true } = {}) {
-		this.adviser.opened = false;
-		this.openedAdviserByInteraction = askedForSuggestions;
+	_showSuggestions({ askedForSuggestions = true } = {}) {
+		this._adviser.opened = false;
+		this._openedAdviserByInteraction = askedForSuggestions;
 
 		const position = document.getSelection().getRangeAt(0).getBoundingClientRect();
 		const enteredCode = window.getSelection().getRangeAt(0).startContainer.textContent.substring(0, window.getSelection().getRangeAt(0).startOffset); // was startOffset + 1
 		const object = enteredCode.match(/([a-zA-Z]*)\.(\w+)$/) && enteredCode.match(/([a-zA-Z]*)\.(\w+)$/)[0] && enteredCode.match(/([a-zA-Z]*)\.(\w+)$/)[0].split(".") ? enteredCode.match(/([a-zA-Z]*)\.(\w+)$/)[0].split(".")[0] : null;
 		const focusWord = enteredCode.match(/([a-zA-Z-]*)$/g) ? enteredCode.match(/([a-zA-Z-]*)$/g)[0] : ""; // \b(\w+)$
-		const suggestions = this.getSuggestions(focusWord, { object, showOnlyGoodMatching: !askedForSuggestions });
+		const suggestions = this._getSuggestions(focusWord, { object, showOnlyGoodMatching: !askedForSuggestions });
 
 		if (position.left === 0 || position.top === 0) return;
 		if ((suggestions.length > 7) && !askedForSuggestions || !askedForSuggestions && suggestions[0] === "No results") {
-			this.adviser.element.innerHTML = "";
-			this.adviser.opened = false;
+			this._adviser.element.innerHTML = "";
+			this._adviser.opened = false;
 			return;
 		}
 
-		this.adviser.opened = true;
-		this.adviser.element.style.left = `${position.left}px`;
-		this.adviser.element.style.top = `${position.top}px`;
-		this.adviser.element.innerHTML = "";
-		suggestions.map(suggestion => this.adviser.element.innerHTML += `<a data-focusword="${focusWord}">${suggestion}</a>`);
-		this.adviser.element.querySelector("a").setAttribute("data-active", "");
+		this._adviser.opened = true;
+		this._adviser.element.style.left = `${position.left}px`;
+		this._adviser.element.style.top = `${position.top}px`;
+		this._adviser.element.innerHTML = "";
+		suggestions.map(suggestion => this._adviser.element.innerHTML += `<a data-focusword="${focusWord}">${suggestion}</a>`);
+		this._adviser.element.querySelector("a").setAttribute("data-active", "");
 	}
 
-	getCharactersBeforeCursor({ escapeElementTags = false } = {}) {
+	_getCharactersBeforeCursor({ escapeElementTags = false } = {}) {
 		try {
 			return escapeElementTags
 				? window.getSelection().getRangeAt(0).startContainer.textContent.substring(0, window.getSelection().getRangeAt(0).startOffset + 1).replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -186,7 +193,7 @@ class OnCode {
 		}catch(e) {}
 	}
 
-	getCharactersBehindCursor() {
+	_getCharactersBehindCursor() {
 		const selection = window.getSelection();
 		const range = selection.getRangeAt(0);
 
@@ -198,9 +205,9 @@ class OnCode {
 		selection.removeAllRanges();
 		selection.addRange(range);
 
-		const charactersBehind = this.editor.innerHTML.split("</span>")[1].split("\n")
-			? this.editor.innerHTML.split("</span>")[1].split("\n")[0]
-			: this.editor.innerHTML.split("</span>")[1];
+		const charactersBehind = this._editor.innerHTML.split("</span>")[1].split("\n")
+			? this._editor.innerHTML.split("</span>")[1].split("\n")[0]
+			: this._editor.innerHTML.split("</span>")[1];
 
 		const spaceOutsideInsertedSpan = document.createTextNode("");
 		range.insertNode(spaceOutsideInsertedSpan);
@@ -209,32 +216,32 @@ class OnCode {
 		selection.removeAllRanges();
 		selection.addRange(range);
 
-		this.editor.querySelector("[data-cursorposition]").outerHTML = this.editor.querySelector("[data-cursorposition]").innerHTML;
+		this._editor.querySelector("[data-cursorposition]").outerHTML = this._editor.querySelector("[data-cursorposition]").innerHTML;
 		return charactersBehind;
 	}
 
-	colorCode() {
-		let editorHTML = this.editor.innerText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	_colorCode() {
+		let editorHTML = this._editor.innerText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-		languages[this.editor.getAttribute("data-language")].colors.map(colorInformation => {
+		languages[this._editor.getAttribute("data-language")].colors.map(colorInformation => {
 			const replacement = colorInformation.regex.replacement || "$1";
 
 			editorHTML = editorHTML.replace(new RegExp(colorInformation.regex.string, colorInformation.regex.flags), `<span class="${colorInformation.class}">${replacement}</span>`)
 		});
 
-		this.highlights.innerHTML = `${editorHTML}`;
+		this._highlights.innerHTML = `${editorHTML}`;
 	}
 
-	handleAdviserBehavior(e) {
+	_handleAdviserBehavior(e) {
 		if (e.code.includes("Key") && !e.ctrlKey) {
-			this.showSuggestions({ askedForSuggestions: false });
-		}else if (!this.openedAdviserByInteraction && e.code !== "ArrowDown" && e.code !== "ArrowUp") {
-			this.adviser.element.innerHTML = "";
-			this.adviser.opened = false;
+			this._showSuggestions({ askedForSuggestions: false });
+		}else if (!this._openedAdviserByInteraction && e.code !== "ArrowDown" && e.code !== "ArrowUp") {
+			this._adviser.element.innerHTML = "";
+			this._adviser.opened = false;
 		}
 	}
 
-	handleEditorSpecificKeys(e) {
+	_handleEditorSpecificKeys(e) {
 		switch (e.key) {
 			case "{": {
 				const selection = window.getSelection();
@@ -273,15 +280,15 @@ class OnCode {
 				break;
 			}
 			case ">": {
-				if (!e.shiftKey || this.editor.getAttribute("data-language") !== "html") return;
+				if (!e.shiftKey || this._editor.getAttribute("data-language") !== "html") return;
 
 				const selection = window.getSelection();
 				const range = selection.getRangeAt(0);
-				const tag = this.getCharactersBeforeCursor().match("\n") && !this.getCharactersBeforeCursor().endsWith("\n")
-					? this.getCharactersBeforeCursor().split("\n")[this.getCharactersBeforeCursor().split("\n").length - 1].match(/<([a-zA-Z0-9]*)/)[0].replace(/[  <>]/g, "")
-					: this.getCharactersBeforeCursor().match("\n")
-						? this.getCharactersBeforeCursor().split("\n")[this.getCharactersBeforeCursor().split("\n").length - 2].match(/<([a-zA-Z0-9]*)/)[0].replace(/[  <>]/g, "")
-						: this.getCharactersBeforeCursor().match(/<([a-zA-Z0-9]*)/)[0].replace(/[  <>]/g, "");
+				const tag = this._getCharactersBeforeCursor().match("\n") && !this._getCharactersBeforeCursor().endsWith("\n")
+					? this._getCharactersBeforeCursor().split("\n")[this._getCharactersBeforeCursor().split("\n").length - 1].match(/<([a-zA-Z0-9]*)/)[0].replace(/[  <>]/g, "")
+					: this._getCharactersBeforeCursor().match("\n")
+						? this._getCharactersBeforeCursor().split("\n")[this._getCharactersBeforeCursor().split("\n").length - 2].match(/<([a-zA-Z0-9]*)/)[0].replace(/[  <>]/g, "")
+						: this._getCharactersBeforeCursor().match(/<([a-zA-Z0-9]*)/)[0].replace(/[  <>]/g, "");
 				const closingTag = document.createTextNode(`</${tag}>`);
 
 				range.insertNode(closingTag);
@@ -308,9 +315,9 @@ class OnCode {
 					selection.removeAllRanges();
 					selection.addRange(range);
 
-					this.editor.innerHTML = this.editor.innerHTML.replace("&nbsp;&nbsp;&nbsp;&nbsp;<span data-cursorposition", "<span data-cursorposition");
-					range.setStartBefore(this.editor.querySelector("[data-cursorposition]"));
-					range.setEndBefore(this.editor.querySelector("[data-cursorposition]"));
+					this._editor.innerHTML = this._editor.innerHTML.replace("&nbsp;&nbsp;&nbsp;&nbsp;<span data-cursorposition", "<span data-cursorposition");
+					range.setStartBefore(this._editor.querySelector("[data-cursorposition]"));
+					range.setEndBefore(this._editor.querySelector("[data-cursorposition]"));
 					selection.removeAllRanges();
 					selection.addRange(range);
 
@@ -324,25 +331,25 @@ class OnCode {
 					document.getSelection().modify("move", "backward", "character");
 					document.getSelection().modify("move", "forward", "character");
 
-					this.editor.querySelector("[data-cursorposition]").outerHTML = this.editor.querySelector("[data-cursorposition]").innerHTML;
+					this._editor.querySelector("[data-cursorposition]").outerHTML = this._editor.querySelector("[data-cursorposition]").innerHTML;
 					return;
 				}
 
-				document.execCommand("insertHTML", false, this.tabCharacter);
+				document.execCommand("insertHTML", false, this._tabCharacter);
 				break;
 			}
 			case " ": {
 				if (!e.ctrlKey || e.code !== "Space") return;
 
-				this.showSuggestions();
+				this._showSuggestions();
 				break;
 			}
 			case "ArrowDown": {
-				this.currentTabOffset = 0;
+				this._currentTabOffset = 0;
 				break;
 			}
 			case "ArrowUp": {
-				this.currentTabOffset = 0;
+				this._currentTabOffset = 0;
 				break;
 			}
 			case "Enter": {
@@ -350,18 +357,18 @@ class OnCode {
 
 				const selection = document.getSelection();
 				const range = selection.getRangeAt(0);
-				let offset = this.tabCharacter.repeat(this.currentTabOffset);
+				let offset = this._tabCharacter.repeat(this._currentTabOffset);
 
-				if (this.getCharactersBeforeCursor().match(/(\(([a-zA-Z]*)|\(\((.*)) => {$/)) {
-					const charactersBehind = this.getCharactersBehindCursor();
+				if (this._getCharactersBeforeCursor().match(/(\(([a-zA-Z]*)|\(\((.*)) => {$/)) {
+					const charactersBehind = this._getCharactersBehindCursor();
 					document.execCommand("insertHTML", false, `\n<span data-spacebetween></span>\n${offset}});REPLACE-`);
 
-					this.editor.innerHTML = this.editor.innerHTML.replace(`REPLACE-${charactersBehind}`, "");
-					range.setStartAfter(this.editor.querySelector("[data-spacebetween]"));
-					range.setEndAfter(this.editor.querySelector("[data-spacebetween]"));
+					this._editor.innerHTML = this._editor.innerHTML.replace(`REPLACE-${charactersBehind}`, "");
+					range.setStartAfter(this._editor.querySelector("[data-spacebetween]"));
+					range.setEndAfter(this._editor.querySelector("[data-spacebetween]"));
 
-					const spaceOutsideInsertedSpan = document.createTextNode(this.tabCharacter + offset);
-					this.editor.insertBefore(spaceOutsideInsertedSpan, this.editor.querySelector("[data-spacebetween]"));
+					const spaceOutsideInsertedSpan = document.createTextNode(this._tabCharacter + offset);
+					this._editor.insertBefore(spaceOutsideInsertedSpan, this._editor.querySelector("[data-spacebetween]"));
 					range.setStartAfter(spaceOutsideInsertedSpan);
 					range.setEndAfter(spaceOutsideInsertedSpan);
 					selection.removeAllRanges();
@@ -369,24 +376,24 @@ class OnCode {
 					document.getSelection().modify("move", "backward", "character");
 					document.getSelection().modify("move", "forward", "character");
 
-					this.editor.querySelector("[data-spacebetween]").outerHTML = this.editor.querySelector("[data-spacebetween]").innerHTML;
+					this._editor.querySelector("[data-spacebetween]").outerHTML = this._editor.querySelector("[data-spacebetween]").innerHTML;
 					return;
 				}
 
 				if (
-					this.getCharactersBeforeCursor().endsWith("{")
-					|| this.getCharactersBeforeCursor().endsWith("[")
-					|| this.getCharactersBeforeCursor().match(/<([a-zA-Z]*?)>$/)
+					this._getCharactersBeforeCursor().endsWith("{")
+					|| this._getCharactersBeforeCursor().endsWith("[")
+					|| this._getCharactersBeforeCursor().match(/<([a-zA-Z]*?)>$/)
 				) {
-					const charactersBehind = this.getCharactersBehindCursor();
+					const charactersBehind = this._getCharactersBehindCursor();
 					document.execCommand("insertHTML", false, `\n<span data-spacebetween></span>\n${offset}${charactersBehind}REPLACE-`);
 
-					this.editor.innerHTML = this.editor.innerHTML.replace(`REPLACE-${charactersBehind}`, "");
-					range.setStartAfter(this.editor.querySelector("[data-spacebetween]"));
-					range.setEndAfter(this.editor.querySelector("[data-spacebetween]"));
+					this._editor.innerHTML = this._editor.innerHTML.replace(`REPLACE-${charactersBehind}`, "");
+					range.setStartAfter(this._editor.querySelector("[data-spacebetween]"));
+					range.setEndAfter(this._editor.querySelector("[data-spacebetween]"));
 
-					const spaceOutsideInsertedSpan = document.createTextNode(this.tabCharacter + offset);
-					this.editor.insertBefore(spaceOutsideInsertedSpan, this.editor.querySelector("[data-spacebetween]"));
+					const spaceOutsideInsertedSpan = document.createTextNode(this._tabCharacter + offset);
+					this._editor.insertBefore(spaceOutsideInsertedSpan, this._editor.querySelector("[data-spacebetween]"));
 					range.setStartAfter(spaceOutsideInsertedSpan);
 					range.setEndAfter(spaceOutsideInsertedSpan);
 					selection.removeAllRanges();
@@ -394,7 +401,7 @@ class OnCode {
 					document.getSelection().modify("move", "backward", "character");
 					document.getSelection().modify("move", "forward", "character");
 
-					this.editor.querySelector("[data-spacebetween]").outerHTML = this.editor.querySelector("[data-spacebetween]").innerHTML;
+					this._editor.querySelector("[data-spacebetween]").outerHTML = this._editor.querySelector("[data-spacebetween]").innerHTML;
 					return;
 				}
 
@@ -403,75 +410,75 @@ class OnCode {
 		}
 	}
 
-	handleKeys(e) {
+	_handleKeys(e) {
 		let suggestionKeyPressed = false;
 
 		switch(e.code) {
 			case "Enter": {
-				if (!this.adviser.opened) break;
+				if (!this._adviser.opened) break;
 				e.preventDefault();
 
-				this.insertSuggestion(this.adviser.element.querySelector("[data-active]"));
+				this._insertSuggestion(this._adviser.element.querySelector("[data-active]"));
 				suggestionKeyPressed = true;
 				return;
 			}
 			case "Tab": {
-				if (!this.adviser.opened) break;
+				if (!this._adviser.opened) break;
 				e.preventDefault();
 
-				this.insertSuggestion(this.adviser.element.querySelector("[data-active]"));
+				this._insertSuggestion(this._adviser.element.querySelector("[data-active]"));
 				suggestionKeyPressed = true;
 				return;
 			}
 			case "ArrowUp": {
-				if (!this.adviser.opened) break;
+				if (!this._adviser.opened) break;
 				e.preventDefault();
 
-				const currentActiveItem = Array.from(this.adviser.element.children).indexOf(this.adviser.element.querySelector("a[data-active]"));
+				const currentActiveItem = Array.from(this._adviser.element.children).indexOf(this._adviser.element.querySelector("a[data-active]"));
 
-				if (!this.adviser.element.children[currentActiveItem - 1]) return;
+				if (!this._adviser.element.children[currentActiveItem - 1]) return;
 
-				this.adviser.element.querySelectorAll("a").forEach(element => element.removeAttribute("data-active"));
-				this.adviser.element.children[currentActiveItem - 1].setAttribute("data-active", "");
+				this._adviser.element.querySelectorAll("a").forEach(element => element.removeAttribute("data-active"));
+				this._adviser.element.children[currentActiveItem - 1].setAttribute("data-active", "");
 				suggestionKeyPressed = true;
 				return;
 			}
 			case "ArrowDown": {
-				if (!this.adviser.opened) break;
+				if (!this._adviser.opened) break;
 				e.preventDefault();
 
-				const currentActiveItem = Array.from(this.adviser.element.children).indexOf(this.adviser.element.querySelector("a[data-active]"));
+				const currentActiveItem = Array.from(this._adviser.element.children).indexOf(this._adviser.element.querySelector("a[data-active]"));
 
-				if (!this.adviser.element.children[currentActiveItem + 1]) return;
+				if (!this._adviser.element.children[currentActiveItem + 1]) return;
 
-				this.adviser.element.querySelectorAll("a").forEach(element => element.removeAttribute("data-active"));
-				this.adviser.element.children[currentActiveItem + 1].setAttribute("data-active", "");
+				this._adviser.element.querySelectorAll("a").forEach(element => element.removeAttribute("data-active"));
+				this._adviser.element.children[currentActiveItem + 1].setAttribute("data-active", "");
 				suggestionKeyPressed = true;
 				return;
 			}
 		}
 
-		if (!suggestionKeyPressed && this.openedAdviserByInteraction) {
-			this.adviser.element.innerHTML = "";
-			this.adviser.opened = false;
+		if (!suggestionKeyPressed && this._openedAdviserByInteraction) {
+			this._adviser.element.innerHTML = "";
+			this._adviser.opened = false;
 		}
 
 		if ((!suggestionKeyPressed && e.target.dataset.adviser) || e.target.hasAttribute("data-editor"))
-			this.handleEditorSpecificKeys(e);
+			this._handleEditorSpecificKeys(e);
 	}
 
-	setOffset() {
-		if (!this.getCharactersBeforeCursor()) return;
+	_setOffset() {
+		if (!this._getCharactersBeforeCursor()) return;
 
-		const escapedCharactersBeforeCursor = this.getCharactersBeforeCursor({ escapeElementTags: true }).replace(/([()\[\]"'`])/g, "\\$1");
-		const offset = !this.getCharactersBeforeCursor().startsWith("\n") && !this.getCharactersBeforeCursor().match("&nbsp;") && this.editor.innerHTML.match(new RegExp(`\n(.*)${escapedCharactersBeforeCursor}`))
-			? this.editor.innerHTML.match(new RegExp(`\n(.*)${escapedCharactersBeforeCursor}`))[0].replace(/&nbsp;/g, " ")
-			: this.getCharactersBeforeCursor().match("\n") && !this.getCharactersBeforeCursor().endsWith("\n")
-				? this.getCharactersBeforeCursor().split("\n")[this.getCharactersBeforeCursor().split("\n").length - 1].replace(/[a-zA-Z{}\[\]()](.*)/g, "")
-				: this.getCharactersBeforeCursor().match("\n")
-					? this.getCharactersBeforeCursor().split("\n")[this.getCharactersBeforeCursor().split("\n").length - 2].replace(/[a-zA-Z{}\[\]()](.*)/g, "")
-					: this.getCharactersBeforeCursor().replace(/[a-zA-Z{}\[\]()](.*)/g, "");
+		const escapedCharactersBeforeCursor = this._getCharactersBeforeCursor({ escapeElementTags: true }).replace(/([()\[\]"'`])/g, "\\$1");
+		const offset = !this._getCharactersBeforeCursor().startsWith("\n") && !this._getCharactersBeforeCursor().match("&nbsp;") && this._editor.innerHTML.match(new RegExp(`\n(.*)${escapedCharactersBeforeCursor}`))
+			? this._editor.innerHTML.match(new RegExp(`\n(.*)${escapedCharactersBeforeCursor}`))[0].replace(/&nbsp;/g, " ")
+			: this._getCharactersBeforeCursor().match("\n") && !this._getCharactersBeforeCursor().endsWith("\n")
+				? this._getCharactersBeforeCursor().split("\n")[this._getCharactersBeforeCursor().split("\n").length - 1].replace(/[a-zA-Z{}\[\]()](.*)/g, "")
+				: this._getCharactersBeforeCursor().match("\n")
+					? this._getCharactersBeforeCursor().split("\n")[this._getCharactersBeforeCursor().split("\n").length - 2].replace(/[a-zA-Z{}\[\]()](.*)/g, "")
+					: this._getCharactersBeforeCursor().replace(/[a-zA-Z{}\[\]()](.*)/g, "");
 
-		this.currentTabOffset = offset.match(/\s{4}/g) ? offset.match(/\s{4}/g).length : 0;
+		this._currentTabOffset = offset.match(/\s{4}/g) ? offset.match(/\s{4}/g).length : 0;
 	}
 }
