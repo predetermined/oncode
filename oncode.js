@@ -1,7 +1,7 @@
 const languages = {
 	js: {
 		colors: [
-			{ regex: { string: "(var|const|let|if|else|document|window|do|forEach|for|return|switch|try|catch|function|continue|debugger|break|while|true|null|undefined|false|new|await|async)(?=( |;|\\.|{|}|\\=|\\(|\\)))(?!(| )<\\/(.*)>)", flags: "gi", },
+			{ regex: { string: "(var|const|let|if|else|document|window|do|forEach|for|return|switch|try|catch|function|continue|debugger|break|while|true|null|undefined|false|new|await|async|of)(?=( |;|\\.|{|}|\\=|\\(|\\)))(?!(| )<\\/(.*)>)", flags: "gi", },
 				class: "||general" },
 			{ regex: { string: "('(([a-zA-Z\\.,!\"§$%&/()-=?\\[\\]#`_ ])*?)')", flags: "gi", },
 				class: "||strings" },
@@ -17,9 +17,16 @@ const languages = {
 				class: "||brackets" },
 			{ regex: { string: "(\\/\\*((.|\\n|\\r)*)\\*\\/|\\/\\/(.*))", flags: "g", },
 				class: "||comments" }],
-		suggestions: ["const", "let", "location", "querySelector", "querySelectorAll", "getElementById", "getElementsByClassName", "getElementsByTagName", "map", "innerHTML",
-			"forEach", "for", "replace", "toLowerCase", "toUpperCase", "indexOf", "length", "includes", "trim", "split", "valueOf", "filter", "find", "innerText", "body",
-			"join", "value", ...Object.getOwnPropertyNames(window)]
+		suggestions: [
+			"const", "let", "for", "white", "of", "new",
+			"document", "Document", "String", "Number", "Array", "Object",
+			...Object.getOwnPropertyNames(Document.prototype).filter(property => !property.includes("queryCommand")),
+			...Object.getOwnPropertyNames(HTMLElement.prototype),
+			...Object.getOwnPropertyNames(String.prototype),
+			...Object.getOwnPropertyNames(Number.prototype),
+			...Object.getOwnPropertyNames(Array.prototype),
+			...Object.getOwnPropertyNames(Object.prototype)
+		]
 	},
 	html: {
 		colors: [{ regex: { string: "([a-z]*=(.*?)(?=&gt;))", flags: "g", },
